@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Textarea Example</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f4f4f4;
+        }
+        .textarea-container {
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            padding: 20px;
+        }
+        textarea {
+            width: 100%;
+            min-height: 200px;
+            resize: vertical;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            padding: 10px;
+            box-sizing: border-box;
+            font-size: 16px;
+            line-height: 1.5;
+        }
+        #char-count {
+            text-align: right;
+            color: #666;
+            margin-top: 5px;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+    <div class="textarea-container">
+        <textarea id="myTextarea" placeholder="Start typing here..."></textarea>
+        <div id="char-count">0 characters</div>
+    </div>
+
+    <script>
+        const textarea = document.getElementById('myTextarea');
+        const charCount = document.getElementById('char-count');
+
+        textarea.addEventListener('input', function() {
+            charCount.textContent = `${this.value.length} characters`;
+        });
+    </script>
+</body>
+</html>
