@@ -3,7 +3,10 @@
 // @namespace    http://tampermonkey.net/
 // @version      1.0
 // @description  Enhances textarea with Markdown formatting and preview
-// @match        *://*/*
+// @match        http://localhost:*/*
+// @match        https://localhost:*/*
+// @match        http://127.0.0.1:*/*
+// @match        https://127.0.0.1:*/*
 // @grant        GM_addStyle
 // @require      https://cdnjs.cloudflare.com/ajax/libs/marked/4.0.16/marked.min.js
 // @require      https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.5.1/highlight.min.js
