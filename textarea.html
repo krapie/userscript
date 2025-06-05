@@ -3,11 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Textarea Example</title>
+    <title>Markdown Textarea with Save</title>
     <style>
         body {
             font-family: Arial, sans-serif;
-            max-width: 600px;
+            max-width: 800px;
             margin: 0 auto;
             padding: 20px;
             background-color: #f4f4f4;
@@ -20,7 +20,7 @@
         }
         textarea {
             width: 100%;
-            min-height: 200px;
+            min-height: 300px;
             resize: vertical;
             border: 1px solid #ddd;
             border-radius: 4px;
@@ -29,27 +29,178 @@
             font-size: 16px;
             line-height: 1.5;
         }
-        #char-count {
-            text-align: right;
+        .controls {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 10px;
+        }
+        #char-count, #save-status {
             color: #666;
-            margin-top: 5px;
             font-size: 14px;
+        }
+        .saved-notes-container {
+            margin-top: 20px;
+            background-color: #f9f9f9;
+            padding: 15px;
+            border-radius: 8px;
+        }
+        .saved-note {
+            background-color: white;
+            border: 1px solid #eee;
+            margin-bottom: 10px;
+            padding: 10px;
+            border-radius: 4px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .saved-note button {
+            background-color: #ff4d4d;
+            color: white;
+            border: none;
+            padding: 5px 10px;
+            border-radius: 3px;
+            cursor: pointer;
         }
     </style>
 </head>
 <body>
     <div class="textarea-container">
         <textarea id="myTextarea" placeholder="Start typing here..."></textarea>
-        <div id="char-count">0 characters</div>
+        <div class="controls">
+            <div id="char-count">0 characters</div>
+            <div id="save-status"></div>
+        </div>
+        <div class="controls">
+            <input type="text" id="note-name" placeholder="Note name (optional)">
+            <button id="save-btn">Save Note</button>
+        </div>
+    </div>
+
+    <div class="saved-notes-container">
+        <h3>Saved Notes</h3>
+        <div id="saved-notes-list"></div>
     </div>
 
     <script>
         const textarea = document.getElementById('myTextarea');
         const charCount = document.getElementById('char-count');
+        const saveStatus = document.getElementById('save-status');
+        const noteName = document.getElementById('note-name');
+        const saveBtn = document.getElementById('save-btn');
+        const savedNotesList = document.getElementById('saved-notes-list');
 
+        // Character count
         textarea.addEventListener('input', function() {
             charCount.textContent = `${this.value.length} characters`;
         });
+
+        // Save note functionality
+        function saveNote() {
+            const text = textarea.value.trim();
+            if (!text) {
+                saveStatus.textContent = 'Cannot save empty note';
+                saveStatus.style.color = 'red';
+                return;
+            }
+
+            // Generate unique key
+            const name = noteName.value.trim() || `Note-${new Date().toISOString()}`;
+            const note = {
+                name: name,
+                content: text,
+                timestamp: new Date().toISOString()
+            };
+
+            // Get existing notes
+            const savedNotes = JSON.parse(localStorage.getItem('markdownNotes') || '[]');
+            
+            // Check if note with same name exists
+            const existingNoteIndex = savedNotes.findIndex(n => n.name === name);
+            if (existingNoteIndex !== -1) {
+                savedNotes[existingNoteIndex] = note;
+            } else {
+                savedNotes.push(note);
+            }
+
+            // Save to local storage
+            localStorage.setItem('markdownNotes', JSON.stringify(savedNotes));
+
+            // Update UI
+            saveStatus.textContent = 'Note saved successfully!';
+            saveStatus.style.color = 'green';
+            
+            // Refresh saved notes list
+            renderSavedNotes();
+        }
+
+        // Render saved notes
+        function renderSavedNotes() {
+            const savedNotes = JSON.parse(localStorage.getItem('markdownNotes') || '[]');
+            savedNotesList.innerHTML = '';
+
+            savedNotes.forEach((note, index) => {
+                const noteEl = document.createElement('div');
+                noteEl.className = 'saved-note';
+                noteEl.innerHTML = `
+                    <div>
+                        <strong>${note.name}</strong>
+                        <br>
+                        ${note.content.substring(0, 50)}${note.content.length > 50 ? '...' : ''}
+                    </div>
+                    <div>
+                        <button onclick="loadNote('${note.name}')">Load</button>
+                        <button onclick="deleteNote('${note.name}')">Delete</button>
+                    </div>
+                `;
+                savedNotesList.appendChild(noteEl);
+            });
+        }
+
+        // Load a specific note
+        window.loadNote = function(name) {
+            const savedNotes = JSON.parse(localStorage.getItem('markdownNotes') || '[]');
+            const note = savedNotes.find(n => n.name === name);
+            if (note) {
+                textarea.value = note.content;
+                noteName.value = note.name;
+                textarea.dispatchEvent(new Event('input'));
+            }
+        }
+
+        // Delete a specific note
+        window.deleteNote = function(name) {
+            let savedNotes = JSON.parse(localStorage.getItem('markdownNotes') || '[]');
+            savedNotes = savedNotes.filter(n => n.name !== name);
+            localStorage.setItem('markdownNotes', JSON.stringify(savedNotes));
+            renderSavedNotes();
+        }
+
+        // Attach save button event
+        saveBtn.addEventListener('click', saveNote);
+
+        // Initial render of saved notes
+        renderSavedNotes();
+
+        // Optional: Auto-save draft periodically
+        setInterval(() => {
+            if (textarea.value.trim()) {
+                const draftName = 'Auto-Draft';
+                const draft = {
+                    name: draftName,
+                    content: textarea.value,
+                    timestamp: new Date().toISOString()
+                };
+                localStorage.setItem('markdownDraft', JSON.stringify(draft));
+            }
+        }, 60000); // Every minute
+
+        // Load auto-draft on page load
+        const autoDraft = JSON.parse(localStorage.getItem('markdownDraft') || 'null');
+        if (autoDraft && autoDraft.content) {
+            textarea.value = autoDraft.content;
+            textarea.dispatchEvent(new Event('input'));
+        }
     </script>
 </body>
 </html>
